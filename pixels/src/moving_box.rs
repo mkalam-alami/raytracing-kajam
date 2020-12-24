@@ -33,6 +33,7 @@ impl MovingBox {
     }
 
     pub fn draw(&self, frame: &mut [u8]) {
+        // TODO Only explore required pixels 
         for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
             let x = (i % config::WIDTH as usize) as i16;
             let y = (i / config::WIDTH as usize) as i16;
@@ -42,13 +43,9 @@ impl MovingBox {
                 && y >= self.y
                 && y < self.y + SIZE;
 
-            let rgba = if inside_the_box {
-                [0x5e, 0x48, 0xe8, 0xff]
-            } else {
-                [0x48, 0xb2, 0xe8, 0xff]
-            };
-
-            pixel.copy_from_slice(&rgba);
+            if inside_the_box {
+                pixel.copy_from_slice(&[0x5e, 0x48, 0xe8, 0xff]);
+            }
         }
     }
 }
