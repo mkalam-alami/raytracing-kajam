@@ -11,7 +11,7 @@ The project is in it very early stages, setting up a basic game engine for the f
 
 - [x] Fill rectangle
 - [x] Draw line https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-- [ ] Fill circle
+- [x] Fill circle
 - [ ] Draw image
 - [ ] Draw bitmap font?
 - [ ] Consider audio

@@ -18,8 +18,8 @@ impl MovingBox {
         Self {
             x: 24,
             y: 16,
-            velocity_x: 1,
-            velocity_y: 1,
+            velocity_x: 3,
+            velocity_y: 3,
         }
     }
 
