@@ -1,6 +1,3 @@
-pub const WIDTH: i32 = 320;
-pub const HEIGHT: i32 = 240;
-
 pub type Color = [u8;4];
 
 pub const COLOR_YELLOW: Color = [0xff, 0xff, 0x00, 0xff];

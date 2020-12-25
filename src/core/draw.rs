@@ -1,11 +1,11 @@
 use std::cmp::min;
 
-use super::{config, math::clamp};
+use super::{colors::Color, config, math::clamp};
 
 const PIXEL_BYTES: usize = 4;
 
 /// Fills a rectangle.
-pub fn fill_rect(frame: &mut [u8], x: i32, y: i32, width: i32, height: i32, color: &[u8; 4]) {
+pub fn fill_rect(frame: &mut [u8], x: i32, y: i32, width: i32, height: i32, color: &Color) {
     for row in clamp(y, 0, config::HEIGHT)..clamp(y + height, 0, config::HEIGHT) + 1 {
         let frame_row_index = row * config::WIDTH;
         let x_start = clamp(x, 0, config::WIDTH - 1);
@@ -21,7 +21,7 @@ pub fn fill_rect(frame: &mut [u8], x: i32, y: i32, width: i32, height: i32, colo
 
 /// Draws the borders of a rectangle.
 /// Prefer using the slightly faster `fill_rect()` when possible.
-pub fn draw_rect(frame: &mut [u8], x: i32, y: i32, width: i32, height: i32, color: &[u8; 4]) {
+pub fn draw_rect(frame: &mut [u8], x: i32, y: i32, width: i32, height: i32, color: &Color) {
     if width > 0 && y == clamp(y, 0, config::HEIGHT) {
         fill_rect(frame, x, y, width, 0, color);
     }
@@ -40,7 +40,7 @@ pub fn draw_rect(frame: &mut [u8], x: i32, y: i32, width: i32, height: i32, colo
 
 #[allow(dead_code)]
 /// Draws a single pixel.
-pub fn draw_pixel(frame: &mut [u8], x: i32, y: i32, color: &[u8; 4]) {
+pub fn draw_pixel(frame: &mut [u8], x: i32, y: i32, color: &Color) {
     if x == clamp(x, 0, config::WIDTH - 1) && y == clamp(y, 0, config::HEIGHT - 1) {
         let pixel_index = (x + y * config::WIDTH) as usize;
         fill_chunk(frame, pixel_index, pixel_index, color);
@@ -48,7 +48,7 @@ pub fn draw_pixel(frame: &mut [u8], x: i32, y: i32, color: &[u8; 4]) {
 }
 
 /// Draws a horizontal or vertical line.
-pub fn draw_straight_line(frame: &mut [u8], x1: i32, y1: i32, x2: i32, y2: i32, color: &[u8; 4]) {
+pub fn draw_straight_line(frame: &mut [u8], x1: i32, y1: i32, x2: i32, y2: i32, color: &Color) {
     if x1 == x2 || y1 == y2 {
         draw_rect(frame, min(x1, x2), min(y1, y2), (x2 - x1).abs(), (y2 - y1).abs(), color);
     }
@@ -56,7 +56,7 @@ pub fn draw_straight_line(frame: &mut [u8], x1: i32, y1: i32, x2: i32, y2: i32, 
 
 /// Draws an arbitrary line.
 /// Prefer `draw_straight_line()` for horizontal or vertical lines.
-pub fn draw_line(frame: &mut [u8], x1: i32, y1: i32, x2: i32, y2: i32, color: &[u8; 4]) {
+pub fn draw_line(frame: &mut [u8], x1: i32, y1: i32, x2: i32, y2: i32, color: &Color) {
     // https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 
     let dx = (x2-x1).abs();
@@ -84,7 +84,7 @@ pub fn draw_line(frame: &mut [u8], x1: i32, y1: i32, x2: i32, y2: i32, color: &[
 }
 
 /// Draws a circle.
-pub fn fill_circle(frame: &mut [u8], center_x: i32, center_y: i32, radius: i32, color: &[u8; 4]) {
+pub fn fill_circle(frame: &mut [u8], center_x: i32, center_y: i32, radius: i32, color: &Color) {
     let radius_f32 = radius as f32 - 0.5;
 
     // Do the math for a single quadrant
@@ -102,7 +102,7 @@ pub fn fill_circle(frame: &mut [u8], center_x: i32, center_y: i32, radius: i32, 
 }
 
 /// Fills the entire frame.
-pub fn fill(frame: &mut [u8], color: &[u8; 4]) {
+pub fn fill(frame: &mut [u8], color: &Color) {
     for pixel in frame.chunks_exact_mut(4) {
         pixel.copy_from_slice(color);
     }
@@ -110,7 +110,7 @@ pub fn fill(frame: &mut [u8], color: &[u8; 4]) {
 
 /// Fills a continuous chunk of the frame, using pixel indexes.
 /// `pixel_end` is inclusive.
-fn fill_chunk(frame: &mut [u8], pixel_start: usize, pixel_end: usize, color: &[u8; 4]) {
+fn fill_chunk(frame: &mut [u8], pixel_start: usize, pixel_end: usize, color: &Color) {
     let frame_start = pixel_start * PIXEL_BYTES;
     let frame_end = (pixel_end + 1) * PIXEL_BYTES;
 

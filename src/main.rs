@@ -5,7 +5,7 @@
 mod core;
 
 mod main_scene;
-mod moving_box;
+mod entity;
 
 use pixels::Error;
 use crate::core::game::{Game, GameSettings};
