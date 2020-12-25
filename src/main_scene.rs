@@ -1,4 +1,5 @@
 use crate::moving_box::MovingBox;
+use crate::core::draw::fill;
 
 #[derive(Clone)]
 pub struct MainScene {
@@ -19,13 +20,8 @@ impl MainScene {
 
     /// Assumes the default texture format: [`wgpu::TextureFormat::Rgba8UnormSrgb`]
     pub fn draw(&self, frame: &mut [u8]) {
-        MainScene::clear_screen(frame);
+        fill(frame, &[0, 0, 0, 0]);
         self.moving_box.draw(frame);
     }
 
-    fn clear_screen(frame: &mut [u8]) {
-        for pixel in frame.chunks_exact_mut(4) {
-            pixel.copy_from_slice(&[0, 0, 0, 0]);
-        }
-    }
 }

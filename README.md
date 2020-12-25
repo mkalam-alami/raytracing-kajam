@@ -9,9 +9,11 @@ The project is in it very early stages, setting up a basic game engine for the f
 
 ## Roadmap
 
-- [x] Render rectangle
-- [ ] Render line
-- [ ] Render image
-- [ ] Render bitmap font?
+- [x] Fill rectangle
+- [ ] Draw line https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+- [ ] Draw line with thickness?
+- [ ] Fill circle
+- [ ] Draw image
+- [ ] Draw bitmap font?
 - [ ] Consider audio
 - [ ] Consider web build
