@@ -1,6 +1,6 @@
-use config::COLOR_PURPLE;
+use config::{COLOR_PURPLE, COLOR_YELLOW};
 
-use crate::core::{config, draw::fill_rect};
+use crate::core::{config, draw::{draw_rect, fill_circle, fill_rect}};
 
 pub const SIZE: i32 = 64;
 pub const PADDING: i32 = -30;
@@ -18,8 +18,8 @@ impl MovingBox {
         Self {
             x: 24,
             y: 16,
-            velocity_x: 5,
-            velocity_y: 5,
+            velocity_x: 1,
+            velocity_y: 1,
         }
     }
 
@@ -37,5 +37,7 @@ impl MovingBox {
 
     pub fn draw(&self, frame: &mut [u8]) {
         fill_rect(frame, self.x, self.y, SIZE, SIZE, &COLOR_PURPLE);
+        draw_rect(frame, self.x, self.y, SIZE, SIZE, &COLOR_YELLOW);
+        fill_circle(frame, self.x + SIZE / 2, self.y + SIZE / 2, (SIZE as f32 * 0.4) as i32, &COLOR_YELLOW);
     }
 }
