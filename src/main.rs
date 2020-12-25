@@ -1,7 +1,9 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
+#[allow(dead_code)]
 mod core;
+
 mod main_scene;
 mod moving_box;
 
