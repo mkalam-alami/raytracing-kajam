@@ -56,7 +56,7 @@ impl Game {
     }
 
     fn create_window(settings: &GameSettings, event_loop: &EventLoop<()>) -> Window {
-        let size = LogicalSize::new(settings.width as f64, settings.height as f64);
+        let size = LogicalSize::new((settings.width * 2) as f64, (settings.height * 2) as f64);
         WindowBuilder::new()
             .with_title(settings.title.clone())
             .with_inner_size(size)

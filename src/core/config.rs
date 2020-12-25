@@ -1,5 +1,5 @@
-pub const WIDTH: i32 = 320;
-pub const HEIGHT: i32 = 240;
+pub const SCREEN_WIDTH: i32 = 320;
+pub const SCREEN_HEIGHT: i32 = 240;
 
 pub type Color = [u8;4];
 

@@ -6,10 +6,10 @@ const PIXEL_BYTES: usize = 4;
 
 /// Fills a rectangle.
 pub fn fill_rect(frame: &mut [u8], x: i32, y: i32, width: i32, height: i32, color: &Color) {
-    for row in clamp(y, 0, config::HEIGHT)..clamp(y + height, 0, config::HEIGHT) + 1 {
-        let frame_row_index = row * config::WIDTH;
-        let x_start = clamp(x, 0, config::WIDTH - 1);
-        let x_end = clamp(x + width, 0, config::WIDTH - 1);
+    for row in clamp(y, 0, config::SCREEN_HEIGHT)..clamp(y + height, 0, config::SCREEN_HEIGHT) + 1 {
+        let frame_row_index = row * config::SCREEN_WIDTH;
+        let x_start = clamp(x, 0, config::SCREEN_WIDTH - 1);
+        let x_end = clamp(x + width, 0, config::SCREEN_WIDTH - 1);
         fill_chunk(
             frame,
             (frame_row_index + x_start) as usize,
@@ -22,17 +22,17 @@ pub fn fill_rect(frame: &mut [u8], x: i32, y: i32, width: i32, height: i32, colo
 /// Draws the borders of a rectangle.
 /// Prefer using the slightly faster `fill_rect()` when possible.
 pub fn draw_rect(frame: &mut [u8], x: i32, y: i32, width: i32, height: i32, color: &Color) {
-    if width > 0 && y == clamp(y, 0, config::HEIGHT) {
+    if width > 0 && y == clamp(y, 0, config::SCREEN_HEIGHT) {
         fill_rect(frame, x, y, width, 0, color);
     }
-    if height > 0 && x == clamp(x, 0, config::WIDTH) {
+    if height > 0 && x == clamp(x, 0, config::SCREEN_WIDTH) {
         fill_rect(frame, x, y, 0, height, color);
     }
     if width > 0 && height > 0 {
-        if y + height == clamp(y + height, 0, config::HEIGHT) {
+        if y + height == clamp(y + height, 0, config::SCREEN_HEIGHT) {
             fill_rect(frame, x, y + height, width, 0, color);
         }
-        if x + width == clamp(x + width, 0, config::WIDTH) {
+        if x + width == clamp(x + width, 0, config::SCREEN_WIDTH) {
             fill_rect(frame, x + width, y, 0, height, color);
         }
     }
@@ -41,8 +41,8 @@ pub fn draw_rect(frame: &mut [u8], x: i32, y: i32, width: i32, height: i32, colo
 #[allow(dead_code)]
 /// Draws a single pixel.
 pub fn draw_pixel(frame: &mut [u8], x: i32, y: i32, color: &Color) {
-    if x == clamp(x, 0, config::WIDTH - 1) && y == clamp(y, 0, config::HEIGHT - 1) {
-        let pixel_index = (x + y * config::WIDTH) as usize;
+    if x == clamp(x, 0, config::SCREEN_WIDTH - 1) && y == clamp(y, 0, config::SCREEN_HEIGHT - 1) {
+        let pixel_index = (x + y * config::SCREEN_WIDTH) as usize;
         fill_chunk(frame, pixel_index, pixel_index, color);
     }
 }
