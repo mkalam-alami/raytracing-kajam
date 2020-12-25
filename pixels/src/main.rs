@@ -14,8 +14,8 @@ fn main() -> Result<(), Error> {
     env_logger::init();
 
     let game_settings = GameSettings {
-        width: config::WIDTH,
-        height: config::HEIGHT,
+        width: config::WIDTH as u32,
+        height: config::HEIGHT as u32,
         title: "Raycasting Kajam".to_string(),
         scene: MainScene::new()
     };
