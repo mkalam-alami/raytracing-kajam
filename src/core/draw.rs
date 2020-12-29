@@ -1,6 +1,6 @@
 use std::cmp::min;
 
-use super::{colors::Color, config, math::clamp};
+use super::{assets::Image, colors::Color, config, math::clamp};
 
 const PIXEL_BYTES: usize = 4;
 
@@ -118,5 +118,22 @@ fn fill_chunk(frame: &mut [u8], pixel_start: usize, pixel_end: usize, color: &Co
         for pixel in frame[frame_start..frame_end + 1].chunks_exact_mut(PIXEL_BYTES) {
             pixel.copy_from_slice(color);
         }
+    }
+}
+
+pub fn draw_image(frame: &mut [u8], x: i32, y: i32, image: &Image) {
+    for row in clamp(y, 0, config::SCREEN_HEIGHT)..clamp(y + image.meta.height, 0, config::SCREEN_HEIGHT)/*  + 1*/ {
+        let frame_row_index = row * config::SCREEN_WIDTH;
+        let x_start = clamp(x, 0, config::SCREEN_WIDTH - 1);
+        let x_end = clamp(x + image.meta.width, 0, config::SCREEN_WIDTH - 1);
+
+        let frame_start = (frame_row_index + x_start) as usize * PIXEL_BYTES;
+        let frame_end = (frame_row_index + x_end/* + 1*/ ) as usize * PIXEL_BYTES;
+
+        // TODO Figure out how bytes are decoded and whether there are 4 per pixel
+        let image_start = (row * image.meta.height) as usize;
+        let image_slice = &image.bytes[image_start..(image_start + frame_end - frame_start + 1)];
+
+        frame[frame_start..frame_end + 1].copy_from_slice(image_slice);
     }
 }

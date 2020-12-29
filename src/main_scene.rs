@@ -3,7 +3,7 @@ use crate::core::draw::fill;
 
 #[derive(Clone)]
 pub struct MainScene {
-    entities: [Entity; 3]
+    entities: [Entity; 4]
 }
 
 impl MainScene {
@@ -12,7 +12,8 @@ impl MainScene {
             entities: [
                 Entity::new(EntityShape::BOX, colors::COLOR_PURPLE),
                 Entity::new(EntityShape::BOXWIREFRAME, colors::COLOR_WHITE),
-                Entity::new(EntityShape::CIRCLE, colors::COLOR_YELLOW)
+                Entity::new(EntityShape::CIRCLE, colors::COLOR_YELLOW),
+                Entity::new(EntityShape::IMAGE("alakajam.png".to_string()), colors::COLOR_WHITE)
             ]
         }
     }
