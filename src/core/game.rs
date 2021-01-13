@@ -1,3 +1,4 @@
+use std::time::SystemTime;
 use winit::window::Window;
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
@@ -25,7 +26,17 @@ impl Game {
         let mut pixels = Game::create_pixels(settings, &window)?;
         let mut scene = settings.scene.clone();
 
+        let mut fps_start = SystemTime::now();
+        let mut fps_counter = 0;
+
         event_loop.run(move |event, _, control_flow| {
+            fps_counter += 1;
+            if SystemTime::now().duration_since(fps_start).unwrap().as_millis() >= 3000 {
+                println!("FPS: {}", fps_counter / 3);
+                fps_start = SystemTime::now();
+                fps_counter = 0;
+            }
+
             // Draw the current frame
             if let Event::RedrawRequested(_) = event {
                 scene.draw(pixels.get_frame());
