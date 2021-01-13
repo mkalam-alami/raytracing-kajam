@@ -4,6 +4,16 @@ pub struct Point {
   pub x: f32,
   pub y: f32
 }
+
+impl Point {
+  pub fn new(x: f32, y: f32) -> Point {
+    Point { x, y }
+  }
+  pub fn floor(&self) -> Point {
+    Point { x: self.x.floor(), y: self.y.floor() }
+  }
+}
+
 impl std::ops::Add for Point {
   type Output = Point;
   fn add(self, other: Point) -> <Self as std::ops::Add<Point>>::Output {
