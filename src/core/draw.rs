@@ -138,6 +138,8 @@ fn fill_chunk(frame: &mut [u8], pixel_start: usize, pixel_end: usize, color: &Co
     }
 }
 
+
+/// XXX Wrong behaviour if the image is partially offscreen on the left or top, image picking needs to be offset
 pub fn draw_image(frame: &mut [u8], x: i32, y: i32, image: &Image) {
     for row in clamp(y, 0, config::SCREEN_HEIGHT)
         ..clamp(y + image.meta.height, 0, config::SCREEN_HEIGHT - 1)
@@ -172,7 +174,7 @@ pub fn draw_image(frame: &mut [u8], x: i32, y: i32, image: &Image) {
             }
         } else {
             println!(
-                "draw image overflow  {}>{}/{} on row {}",
+                "draw image overflow {}>{}/{} on row {}",
                 image_start,
                 image_end,
                 image.bytes.len(),

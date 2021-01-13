@@ -1,3 +1,6 @@
+use std::ops;
+use std::fmt;
+
 
 #[derive(Clone, Copy)]
 pub struct Point {
@@ -14,21 +17,33 @@ impl Point {
   }
 }
 
-impl std::ops::Add for Point {
+impl ops::Add for Point {
   type Output = Point;
-  fn add(self, other: Point) -> <Self as std::ops::Add<Point>>::Output {
+  fn add(self, other: Point) -> Point {
     Point { x: self.x + other.x, y: self.y + other.y }
   }
 }
-impl std::ops::Mul<Point> for Point {
+impl ops::Sub for Point {
+  type Output = Point;
+  fn sub(self, other: Point) -> Point {
+    Point { x: self.x - other.x, y: self.y - other.y }
+  }
+}
+impl ops::Mul<Point> for Point {
   type Output = Point;
   fn mul(self, other: Point) -> Point {
     Point { x: self.x * other.x, y: self.y * other.y }
   }
 }
-impl std::ops::Mul<f32> for Point {
+impl ops::Mul<f32> for Point {
   type Output = Point;
   fn mul(self, other: f32) -> Point {
     Point { x: self.x * other, y: self.y * other }
+  }
+}
+
+impl fmt::Display for Point {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+    write!(f, "Point[x={},y={}]", self.x, self.y)
   }
 }

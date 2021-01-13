@@ -34,7 +34,7 @@ impl Game {
                     return;
                 }
             }
-    
+
             // Handle input events
             if input.update(event) {
                 // Close events
@@ -42,14 +42,14 @@ impl Game {
                     *control_flow = ControlFlow::Exit;
                     return;
                 }
-    
+
                 // Resize the window
                 if let Some(size) = input.window_resized() {
                     pixels.resize(size.width, size.height);
                 }
-    
+
                 // Update internal state and request a redraw
-                scene.update();
+                scene.update(&input);
                 window.request_redraw();
             }
         });

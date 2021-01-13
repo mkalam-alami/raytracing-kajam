@@ -9,6 +9,7 @@ mod entity;
 mod map;
 mod raycaster;
 mod point;
+mod player;
 
 use pixels::Error;
 use crate::core::game::{Game, GameSettings};

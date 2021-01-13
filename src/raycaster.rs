@@ -3,12 +3,11 @@ use crate::core::config;
 use crate::map::Map;
 use crate::point::Point;
 use crate::core::colors;
+use crate::player::Player;
 
 #[derive(Clone)]
 pub struct Raycaster {
   map: Map,
-  position: Point,
-  direction: Point,
   camera_plane: Point,
 }
 
@@ -17,19 +16,17 @@ impl Raycaster {
   pub fn new(map: Map) -> Self {
     Self {
       map,
-      position: Point { x: 22., y: 22. },
-      direction: Point { x: -1., y: 0. },
       camera_plane: Point { x: 0., y: 0.66 },
     }
   }
 
-  pub fn draw(&self, frame: &mut [u8]) {
+  pub fn draw(&self, frame: &mut [u8], player: &Player) {
     let screen_size = Point { x: config::SCREEN_WIDTH as f32, y: config::SCREEN_HEIGHT as f32 };
     for x in 0..config::SCREEN_WIDTH {
       let camera_x = 2. * x as f32 / screen_size.x - 1.; // [-1;1]
-      let ray_dir = self.direction + self.camera_plane * camera_x;
+      let ray_dir = player.dir + self.camera_plane * camera_x;
 
-      let mut map_coords = self.position.floor();
+      let mut map_coords = player.pos.floor();
       let delta_dist = Point::new(
         if ray_dir.y == 0. {
           0.
@@ -51,17 +48,17 @@ impl Raycaster {
       let mut side_dist = Point::new(0., 0.); //length of ray from current position to next x or y-side
       if ray_dir.x < 0. {
         step.x = -1.;
-        side_dist.x = (self.position.x - map_coords.x) * delta_dist.x;
+        side_dist.x = (player.pos.x - map_coords.x) * delta_dist.x;
       } else {
         step.x = 1.;
-        side_dist.x = (map_coords.x + 1. - self.position.x) * delta_dist.x;
+        side_dist.x = (map_coords.x + 1. - player.pos.x) * delta_dist.x;
       }
       if ray_dir.y < 0. {
         step.y = -1.;
-        side_dist.y = (self.position.y - map_coords.y) * delta_dist.y;
+        side_dist.y = (player.pos.y - map_coords.y) * delta_dist.y;
       } else {
         step.y = 1.;
-        side_dist.y = (map_coords.y + 1. - self.position.y) * delta_dist.y;
+        side_dist.y = (map_coords.y + 1. - player.pos.y) * delta_dist.y;
       }
 
       let mut hit = 0 as i8; // hit wall value
@@ -93,18 +90,21 @@ impl Raycaster {
 
       if hit > 0 {
         let perp_wall_dist = if side {
-          (map_coords.y - self.position.y + (1. - step.y) / 2.) / ray_dir.y
+          (map_coords.y - player.pos.y + (1. - step.y) / 2.) / ray_dir.y
         } else {
-          (map_coords.x - self.position.x + (1. - step.x) / 2.) / ray_dir.x
+          (map_coords.x - player.pos.x + (1. - step.x) / 2.) / ray_dir.x
         };
         let line_height = screen_size.y / perp_wall_dist;
         let draw_start_y = ((screen_size.y + line_height) / 2.).min(screen_size.y - 1.);
         let draw_end_y = ((screen_size.y - line_height) / 2.).max(0.);
 
         let color = match hit {
-          4 => colors::COLOR_WHITE,
           1 => colors::COLOR_YELLOW,
-          _ => colors::COLOR_PURPLE
+          2 => colors::COLOR_LIGHT_BLUE,
+          3 => colors::COLOR_ORANGE,
+          4 => colors::COLOR_BROWN,
+          5 => colors::COLOR_PURPLE,
+          _ => colors::COLOR_DARK_BLUE
         };
 
         draw_straight_line(frame, x as i32, draw_start_y as i32, x as i32, draw_end_y as i32, &color);

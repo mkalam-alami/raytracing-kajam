@@ -25,6 +25,7 @@ pub struct Entity {
     image: Option<Box<Image>>
 }
 
+#[allow(dead_code)]
 impl Entity {
     pub fn new(shape: EntityShape, color: Color) -> Self {
         Self {
