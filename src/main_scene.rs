@@ -1,9 +1,12 @@
+use crate::raycaster::Raycaster;
 use crate::{core::colors, entity::{Entity, EntityShape}};
 use crate::core::draw::fill;
+use crate::map::Map;
 
 #[derive(Clone)]
 pub struct MainScene {
-    entities: [Entity; 4]
+    entities: Vec<Entity>,
+    raycaster: Raycaster
 }
 
 impl MainScene {
@@ -14,7 +17,8 @@ impl MainScene {
                 Entity::new(EntityShape::BOXWIREFRAME, colors::COLOR_WHITE),
                 Entity::new(EntityShape::CIRCLE, colors::COLOR_YELLOW),
                 Entity::new(EntityShape::IMAGE("alakajam.png".to_string()), colors::COLOR_WHITE)
-            ]
+            ].to_vec(),
+            raycaster: Raycaster::new(Map::new())
         }
     }
 
@@ -29,6 +33,7 @@ impl MainScene {
         fill(frame, &[0, 0, 0, 0]);
         self.entities.iter()
             .for_each(|e| e.draw(frame));
+        self.raycaster.draw(frame);
     }
 
 }

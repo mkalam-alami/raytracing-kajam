@@ -6,6 +6,9 @@ mod core;
 
 mod main_scene;
 mod entity;
+mod map;
+mod raycaster;
+mod point;
 
 use pixels::Error;
 use crate::core::game::{Game, GameSettings};
