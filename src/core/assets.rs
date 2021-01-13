@@ -5,6 +5,7 @@ use std::fs::File;
 pub struct ImageMetadata {
   pub width: i32,
   pub height: i32,
+  pub alpha: bool
 }
 
 #[derive(Clone)]
@@ -26,18 +27,23 @@ pub fn load_png(path: &str) -> Image {
   let (meta, mut reader) = decoder.read_info().unwrap();
   let mut bytes = vec![0; meta.buffer_size()];
   reader.next_frame(&mut bytes).unwrap();
+
+  let mut alpha = true;
   if meta.color_type == png::ColorType::RGB {
     bytes = rgb_to_rgba(bytes);
+    alpha = false;
   }
 
   // println!(
-  //   "{} {} {} {} {} {}",
-  //   bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]
+  //   "{} {} {} {}\n{} {} {} {}",
+  //   bytes[0], bytes[1], bytes[2], bytes[3],
+  //   bytes[4], bytes[5], bytes[6], bytes[7]
   // );
   Image {
     meta: ImageMetadata {
       width: meta.width as i32,
       height: meta.height as i32,
+      alpha
     },
     bytes,
   }

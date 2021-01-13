@@ -142,17 +142,42 @@ pub fn draw_image(frame: &mut [u8], x: i32, y: i32, image: &Image) {
     for row in clamp(y, 0, config::SCREEN_HEIGHT)
         ..clamp(y + image.meta.height, 0, config::SCREEN_HEIGHT - 1)
     {
-        let frame_row_index = row * config::SCREEN_WIDTH;
         let x_start = clamp(x, 0, config::SCREEN_WIDTH - 1);
         let x_end = clamp(x + image.meta.width, 0, config::SCREEN_WIDTH - 1);
 
-        let frame_start = (frame_row_index + x_start) as usize * PIXEL_BYTES;
-        let frame_end = (frame_row_index + x_end/* + 1*/) as usize * PIXEL_BYTES;
+        let frame_row_start = (row * config::SCREEN_WIDTH) as usize * PIXEL_BYTES;
+        let frame_start = frame_row_start + x_start as usize * PIXEL_BYTES;
+        let frame_end = frame_row_start + x_end as usize * PIXEL_BYTES;
 
-        let image_start = ((row - y) * image.meta.height) as usize * PIXEL_BYTES;
+        let image_start = ((row - y) * image.meta.width) as usize * PIXEL_BYTES;
         let image_end = image_start + frame_end - frame_start;
-        let image_slice = &image.bytes[image_start..image_end];
 
-        frame[frame_start..frame_end].copy_from_slice(image_slice);
+        if image_end <= image.bytes.len() {
+            if image.meta.alpha {
+                for pixel in 0..(x_end - x_start) as usize {
+                    if image.bytes[image_start + pixel * PIXEL_BYTES + 3/* alpha indexvalue*/] > 128
+                    {
+                        frame[frame_start + pixel * PIXEL_BYTES
+                            ..frame_start + (pixel + 1) * PIXEL_BYTES]
+                            .copy_from_slice(
+                                &image.bytes[image_start + pixel * PIXEL_BYTES
+                                    ..image_start + (pixel + 1) * PIXEL_BYTES],
+                            );
+                    }
+                }
+            } else {
+                // copy whole line
+                let image_slice = &image.bytes[image_start..image_end];
+                frame[frame_start..frame_end].copy_from_slice(image_slice);
+            }
+        } else {
+            println!(
+                "draw image overflow  {}>{}/{} on row {}",
+                image_start,
+                image_end,
+                image.bytes.len(),
+                row - y
+            );
+        }
     }
 }

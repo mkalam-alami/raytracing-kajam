@@ -16,7 +16,8 @@ impl MainScene {
                 Entity::new(EntityShape::BOX, colors::COLOR_PURPLE),
                 Entity::new(EntityShape::BOXWIREFRAME, colors::COLOR_WHITE),
                 Entity::new(EntityShape::CIRCLE, colors::COLOR_YELLOW),
-                Entity::new(EntityShape::IMAGE("alakajam.png".to_string()), colors::COLOR_WHITE)
+                Entity::new(EntityShape::IMAGE("alakajam.png".to_string()), colors::COLOR_WHITE),
+                Entity::new(EntityShape::IMAGE("jellymancer.png".to_string()), colors::COLOR_WHITE)
             ].to_vec(),
             raycaster: Raycaster::new(Map::new())
         }
