@@ -50,7 +50,14 @@ pub fn draw_pixel(frame: &mut [u8], x: i32, y: i32, color: &Color) {
 /// Draws a horizontal or vertical line.
 pub fn draw_straight_line(frame: &mut [u8], x1: i32, y1: i32, x2: i32, y2: i32, color: &Color) {
     if x1 == x2 || y1 == y2 {
-        draw_rect(frame, min(x1, x2), min(y1, y2), (x2 - x1).abs(), (y2 - y1).abs(), color);
+        draw_rect(
+            frame,
+            min(x1, x2),
+            min(y1, y2),
+            (x2 - x1).abs(),
+            (y2 - y1).abs(),
+            color,
+        );
     }
 }
 
@@ -59,18 +66,20 @@ pub fn draw_straight_line(frame: &mut [u8], x1: i32, y1: i32, x2: i32, y2: i32, 
 pub fn draw_line(frame: &mut [u8], x1: i32, y1: i32, x2: i32, y2: i32, color: &Color) {
     // https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 
-    let dx = (x2-x1).abs();
+    let dx = (x2 - x1).abs();
     let sx = if x1 < x2 { 1 } else { -1 };
-    let dy = -(y2-y1).abs();
+    let dy = -(y2 - y1).abs();
     let sy = if y1 < y2 { 1 } else { -1 };
-    
+
     let mut x = x1;
     let mut y = y1;
     let mut err = dx + dy;
 
     loop {
         draw_pixel(frame, x, y, color);
-        if x == x2 && y == y2 { break; }
+        if x == x2 && y == y2 {
+            break;
+        }
         let e2 = 2 * err;
         if e2 >= dy {
             err += dy;
@@ -88,13 +97,21 @@ pub fn fill_circle(frame: &mut [u8], center_x: i32, center_y: i32, radius: i32, 
     let radius_f32 = radius as f32 - 0.5;
 
     // Do the math for a single quadrant
-    for y in center_y-radius..center_y+1 {
-        for x in center_x-radius..center_x+1 {
-            let distance_to_center = (((center_x-x).pow(2) + (center_y-y).pow(2)) as f32).sqrt();
+    for y in center_y - radius..center_y + 1 {
+        for x in center_x - radius..center_x + 1 {
+            let distance_to_center =
+                (((center_x - x).pow(2) + (center_y - y).pow(2)) as f32).sqrt();
             if distance_to_center < radius_f32 {
                 // Deduce the entire top and bottom rows
                 fill_rect(frame, x, y, (center_x - x) * 2, 0, color);
-                fill_rect(frame, x, y + 2 * (center_y - y), (center_x - x) * 2, 0, color);
+                fill_rect(
+                    frame,
+                    x,
+                    y + 2 * (center_y - y),
+                    (center_x - x) * 2,
+                    0,
+                    color,
+                );
                 break;
             }
         }
@@ -122,18 +139,20 @@ fn fill_chunk(frame: &mut [u8], pixel_start: usize, pixel_end: usize, color: &Co
 }
 
 pub fn draw_image(frame: &mut [u8], x: i32, y: i32, image: &Image) {
-    for row in clamp(y, 0, config::SCREEN_HEIGHT)..clamp(y + image.meta.height, 0, config::SCREEN_HEIGHT)/*  + 1*/ {
+    for row in clamp(y, 0, config::SCREEN_HEIGHT)
+        ..clamp(y + image.meta.height, 0, config::SCREEN_HEIGHT - 1)
+    {
         let frame_row_index = row * config::SCREEN_WIDTH;
         let x_start = clamp(x, 0, config::SCREEN_WIDTH - 1);
         let x_end = clamp(x + image.meta.width, 0, config::SCREEN_WIDTH - 1);
 
         let frame_start = (frame_row_index + x_start) as usize * PIXEL_BYTES;
-        let frame_end = (frame_row_index + x_end/* + 1*/ ) as usize * PIXEL_BYTES;
+        let frame_end = (frame_row_index + x_end/* + 1*/) as usize * PIXEL_BYTES;
 
-        // TODO Figure out how bytes are decoded and whether there are 4 per pixel
-        let image_start = (row * image.meta.height) as usize;
-        let image_slice = &image.bytes[image_start..(image_start + frame_end - frame_start + 1)];
+        let image_start = ((row - y) * image.meta.height) as usize * PIXEL_BYTES;
+        let image_end = image_start + frame_end - frame_start;
+        let image_slice = &image.bytes[image_start..image_end];
 
-        frame[frame_start..frame_end + 1].copy_from_slice(image_slice);
+        frame[frame_start..frame_end].copy_from_slice(image_slice);
     }
 }

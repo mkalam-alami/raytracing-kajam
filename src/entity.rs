@@ -28,10 +28,10 @@ pub struct Entity {
 impl Entity {
     pub fn new(shape: EntityShape, color: Color) -> Self {
         Self {
-            x: rand::random::<f32>() * config::SCREEN_WIDTH as f32,
-            y: rand::random::<f32>() * config::SCREEN_HEIGHT as f32,
-            velocity_x: 0.05 * (if rand::random::<bool>() { 1.0 } else { -1.0 }),
-            velocity_y: 0.05 * (if rand::random::<bool>() { 1.0 } else { -1.0 }),
+            x: rand::random::<f32>() * config::SCREEN_WIDTH as f32 / 2. + config::SCREEN_WIDTH as f32 / 4.,
+            y: rand::random::<f32>() * config::SCREEN_HEIGHT as f32 / 2. + config::SCREEN_WIDTH as f32 / 4.,
+            velocity_x: 0.5 * (if rand::random::<bool>() { 1.0 } else { -1.0 }),
+            velocity_y: 0.5 * (if rand::random::<bool>() { 1.0 } else { -1.0 }),
             shape: shape.clone(),
             color,
             image: match shape {
@@ -61,7 +61,7 @@ impl Entity {
            EntityShape::IMAGE(_) => {
                if self.image.is_some() {
                    // TODO
-                    // draw_image(frame, self.x as i32, self.y as i32, &self.image.as_ref().unwrap().deref())
+                   draw_image(frame, self.x as i32, self.y as i32, &self.image.as_ref().unwrap().deref())
                }
            }
         }
