@@ -1,20 +1,20 @@
-use std::time::SystemTime;
-use winit::window::Window;
+use crate::main_scene::MainScene;
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
+use std::time::SystemTime;
 use winit::dpi::LogicalSize;
 use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
+use winit::window::Window;
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
-use crate::main_scene::MainScene;
 
 #[derive(Clone)]
 pub struct GameSettings {
     pub title: String,
     pub width: u32,
     pub height: u32,
-    pub scene: MainScene // TODO figure out how to use a trait without annoying the compiler with dynamic sizes
+    pub scene: MainScene, // TODO figure out how to use a trait without annoying the compiler with dynamic sizes
 }
 
 pub struct Game;
@@ -30,17 +30,22 @@ impl Game {
         let mut fps_counter = 0;
 
         event_loop.run(move |event, _, control_flow| {
-            fps_counter += 1;
-            if SystemTime::now().duration_since(fps_start).unwrap().as_millis() >= 3000 {
-                println!("FPS: {}", fps_counter / 3);
-                fps_start = SystemTime::now();
-                fps_counter = 0;
-            }
-
             // Draw the current frame
             if let Event::RedrawRequested(_) = event {
+                fps_counter += 1;
+                let now = SystemTime::now();
+                if now.duration_since(fps_start).unwrap().as_millis() >= 3000 {
+                    println!("FPS: {}", fps_counter / 3);
+                    fps_start = SystemTime::now();
+                    fps_counter = 0;
+                }
+
                 scene.draw(pixels.get_frame());
-                if pixels.render().map_err(|e| error!("pixels.render() failed: {}", e)).is_err() {
+                if pixels
+                    .render()
+                    .map_err(|e| error!("pixels.render() failed: {}", e))
+                    .is_err()
+                {
                     *control_flow = ControlFlow::Exit;
                     return;
                 }
