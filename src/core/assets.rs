@@ -5,7 +5,8 @@ use std::fs::File;
 pub struct ImageMetadata {
   pub width: i32,
   pub height: i32,
-  pub alpha: bool
+  pub alpha: bool,
+  pub bytes_per_pixel: u8
 }
 
 #[derive(Clone)]
@@ -19,10 +20,14 @@ pub fn load_png(path: &str) -> Image {
   full_path.push_str("src/assets/"); // TODO Better handling of dev vs. build
   full_path.push_str(path);
 
+  let mut build_full_path = String::new();
+  build_full_path.push_str("assets/"); // TODO Better handling of dev vs. build
+  build_full_path.push_str(path);
+
   // println!("{}", current_dir().unwrap().to_str().unwrap());
   // println!("{}", full_path);
 
-  let mut decoder = png::Decoder::new(File::open(full_path).unwrap());
+  let mut decoder = png::Decoder::new(File::open(full_path).or_else(|_| File::open(build_full_path)).unwrap());
   decoder.set_transformations(Transformations::EXPAND);
   let (meta, mut reader) = decoder.read_info().unwrap();
   let mut bytes = vec![0; meta.buffer_size()];
@@ -43,7 +48,8 @@ pub fn load_png(path: &str) -> Image {
     meta: ImageMetadata {
       width: meta.width as i32,
       height: meta.height as i32,
-      alpha
+      alpha,
+      bytes_per_pixel: 4
     },
     bytes,
   }

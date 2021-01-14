@@ -13,6 +13,15 @@ The project is in it very early stages, setting up a basic game engine for the f
 - [x] Draw line https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 - [x] Fill circle
 - [x] Draw image
-- [ ] Draw bitmap font?
+- [x] Basic raycaster
+- [x] Load palette from PNG
+- [x] Load map from PNG
+- [x] Player movement
+- [ ] Accurate time handling
+- [ ] Solve WGPU memory leak
+- [ ] Collisions
+- [ ] Textured walls
+- [ ] Tile-based movement
+- [ ] Gameplay!
 - [ ] Consider audio
-- [ ] Consider web build
+

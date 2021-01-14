@@ -1,30 +1,26 @@
-use crate::core::draw::draw_straight_line;
+use crate::{core::draw::draw_straight_line, palette::Palette};
 use crate::core::config;
 use crate::map::Map;
 use crate::point::Point;
-use crate::core::colors;
 use crate::player::Player;
 
 #[derive(Clone)]
 pub struct Raycaster {
   map: Map,
-  camera_plane: Point,
+  palette: Palette
 }
 
 #[allow(dead_code)]
 impl Raycaster {
-  pub fn new(map: Map) -> Self {
-    Self {
-      map,
-      camera_plane: Point { x: 0., y: 0.66 },
-    }
+  pub fn new(map: Map, palette: Palette) -> Self {
+    Self { map, palette }
   }
 
   pub fn draw(&self, frame: &mut [u8], player: &Player) {
     let screen_size = Point { x: config::SCREEN_WIDTH as f32, y: config::SCREEN_HEIGHT as f32 };
     for x in 0..config::SCREEN_WIDTH {
       let camera_x = 2. * x as f32 / screen_size.x - 1.; // [-1;1]
-      let ray_dir = player.dir + self.camera_plane * camera_x;
+      let ray_dir = player.dir + player.get_camera_plane() * camera_x;
 
       let mut map_coords = player.pos.floor();
       let delta_dist = Point::new(
@@ -98,15 +94,7 @@ impl Raycaster {
         let draw_start_y = ((screen_size.y + line_height) / 2.).min(screen_size.y - 1.);
         let draw_end_y = ((screen_size.y - line_height) / 2.).max(0.);
 
-        let color = match hit {
-          1 => colors::COLOR_YELLOW,
-          2 => colors::COLOR_LIGHT_BLUE,
-          3 => colors::COLOR_ORANGE,
-          4 => colors::COLOR_BROWN,
-          5 => colors::COLOR_PURPLE,
-          _ => colors::COLOR_DARK_BLUE
-        };
-
+        let color = self.palette.pick(hit as usize);
         draw_straight_line(frame, x as i32, draw_start_y as i32, x as i32, draw_end_y as i32, &color);
       }
     }

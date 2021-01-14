@@ -10,6 +10,7 @@ mod map;
 mod raycaster;
 mod point;
 mod player;
+mod palette;
 
 use pixels::Error;
 use crate::core::game::{Game, GameSettings};
