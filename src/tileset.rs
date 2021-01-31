@@ -62,31 +62,48 @@ impl Tileset {
     self.palette.len() as u8
   }
 
-  pub fn is_rendered_as_floor(color_id: i8) -> bool {
+  pub fn is_rendered_as_floor(color_id: u8) -> bool {
     color_id < 10
   }
 
-  pub fn is_rendered_as_wall(color_id: i8) -> bool {
-    color_id >= 10
-  }
-
-  pub fn is_colliding(color_id: i8) -> bool {
+  pub fn is_rendered_as_wall(color_id: u8) -> bool {
     color_id >= 10 && color_id != 20 /* door 0 */
   }
 
-  pub fn is_spawn(color_id: i8) -> bool {
+  pub fn is_colliding(color_id: u8) -> bool {
+    color_id >= 10 && color_id != 20 /* door 0 */
+  }
+
+  pub fn is_spawn(color_id: u8) -> bool {
     color_id == 9
   }
 
-  pub fn is_spawn_dir(color_id: i8) -> bool {
+  pub fn is_spawn_dir(color_id: u8) -> bool {
     color_id == 8
   }
 
-  pub fn is_textured(color_id: i8) -> bool {
+  pub fn is_textured(color_id: u8) -> bool {
     color_id >= 20
   }
 
-  pub fn get_texture(&self, color_id: i8) -> &Image {
+  pub fn get_texture(&self, color_id: u8) -> &Image {
     self.textures.get((color_id - 20) as usize).unwrap()
   }
+
+  pub fn is_trigger(color_id: u8) -> bool {
+    color_id > 1 && color_id < 8
+  }
+
+  pub fn get_door_color_id(door_value: u8) -> u8 {
+    door_value + 20
+  }
+
+  pub fn get_door_value(color_id: u8) -> Option<u8> {
+    if color_id >= 20 {
+      Some(color_id - 20)
+    } else {
+      None
+    }
+  }
+
 }

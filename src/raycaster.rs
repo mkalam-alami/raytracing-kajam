@@ -1,3 +1,5 @@
+use config::TARGET_FPS;
+
 use crate::{core::{assets::Image, colors::Color, draw::{draw_pixel, draw_straight_line}, game::GameState, math::clamp}, tileset::{Tileset}};
 use crate::core::config;
 use crate::map::Map;
@@ -5,27 +7,27 @@ use crate::point::Point;
 use crate::player::Player;
 
 const THIRD_PERSON_OFFSET: f32 = 0.8;
+const FLASH_DURATION: f32 = 0.15;
 
 #[derive(Clone)]
 pub struct Raycaster {
-  map: Map,
   tileset: Tileset
 }
 
 #[allow(dead_code)]
 impl Raycaster {
-  pub fn new(map: Map, tileset: Tileset) -> Self {
-    Self { map, tileset }
+  pub fn new(tileset: Tileset) -> Self {
+    Self { tileset }
   }
 
-  pub fn draw(&self, frame: &mut [u8], player: &Player, game_state: &GameState) {
+  pub fn draw(&self, map: &Map, frame: &mut [u8], player: &Player, game_state: &GameState) {
     let screen_size = Point { x: config::SCREEN_WIDTH as f32, y: config::SCREEN_HEIGHT as f32 };
 
-    self.draw_floor(frame, player, screen_size, game_state);
-    self.draw_walls(frame, player, screen_size);
+    self.draw_floor(map, frame, player, screen_size, game_state);
+    self.draw_walls(map, frame, player, screen_size);
   }
 
-  pub fn draw_floor(&self, frame: &mut [u8], player: &Player, screen_size: Point, game_state: &GameState) {
+  pub fn draw_floor(&self, map: &Map, frame: &mut [u8], player: &Player, screen_size: Point, game_state: &GameState) {
     let camera_plane = player.get_camera_plane();
     let mut pixel_color: Color = Default::default();
 
@@ -59,16 +61,19 @@ impl Raycaster {
       floor -= player.dir * THIRD_PERSON_OFFSET; // 3rd person view
 
       for x in 0..config::SCREEN_WIDTH {
-        let cell_x = floor.x.floor() as i32;
-        let cell_y = floor.y.floor() as i32;
+        let cell_x = floor.x.floor() as isize;
+        let cell_y = floor.y.floor() as isize;
+        let color_id = *map.get(cell_x as usize, cell_y as usize).unwrap_or(&Tileset::default_floor_color_id());
+        let current_cell = player.get_current_cell();
 
         floor += floor_step;
 
-        if (cell_x, cell_y) == player.get_current_cell() && game_state.frame_counter - player.in_cell_since < (0.25 * 60.0/*FPS*/) as u32  {
+        if (cell_x, cell_y) == (current_cell.0 as isize, current_cell.1 as isize)
+          && Tileset::is_trigger(color_id)
+          && game_state.frame_counter - player.cell_last_triggered < (FLASH_DURATION * TARGET_FPS as f32) as u32 {
           // white flash on cell change
           pixel_color.copy_from_slice(&config::COLOR_WHITE);
         } else {
-          let color_id = *self.map.get(cell_x as usize, cell_y as usize).unwrap_or(&Tileset::default_floor_color_id()) as i8;
           if Tileset::is_textured(color_id) {
             if Tileset::is_rendered_as_floor(color_id) {
               let texture = self.tileset.get_texture(color_id);
@@ -89,7 +94,7 @@ impl Raycaster {
 
   }
 
-  pub fn draw_walls(&self, frame: &mut [u8], player: &Player, screen_size: Point) {
+  pub fn draw_walls(&self, map: &Map, frame: &mut [u8], player: &Player, screen_size: Point) {
     let camera_pos = player.pos - player.dir * THIRD_PERSON_OFFSET; // 3rd person view
 
     for x in 0..config::SCREEN_WIDTH {
@@ -148,9 +153,9 @@ impl Raycaster {
         }
 
         // check if ray has hit a wall
-        let tile = self.map.get(map_coords.x as usize, map_coords.y as usize);
+        let tile = map.get(map_coords.x as usize, map_coords.y as usize);
         if let Some(tile_value) = tile {
-          if Tileset::is_rendered_as_wall(*tile_value as i8) {
+          if Tileset::is_rendered_as_wall(*tile_value) {
             hit = *tile_value as i8;
           }
         } else {
@@ -158,18 +163,18 @@ impl Raycaster {
         }
       }
 
-      if Tileset::is_rendered_as_wall(hit) {
+      if hit >= 0 && Tileset::is_rendered_as_wall(hit as u8) {
         let perp_wall_dist = if side {
           (map_coords.y - camera_pos.y + (1. - step.y) / 2.) / ray_dir.y
         } else {
           (map_coords.x - camera_pos.x + (1. - step.x) / 2.) / ray_dir.x
         };
-        self.draw_wall_column(frame, hit, x, camera_pos, side, perp_wall_dist, ray_dir, screen_size);
+        self.draw_wall_column(frame, hit as u8, x, camera_pos, side, perp_wall_dist, ray_dir, screen_size);
       }
     }
   }
 
-  fn draw_wall_column(&self, frame: &mut [u8], hit: i8, x: i32, pos: Point, side: bool, perp_wall_dist: f32, ray_dir: Point, screen_size: Point) {
+  fn draw_wall_column(&self, frame: &mut [u8], hit: u8, x: i32, pos: Point, side: bool, perp_wall_dist: f32, ray_dir: Point, screen_size: Point) {
     let line_height = screen_size.y / perp_wall_dist;
     let draw_high_y = ((screen_size.y + line_height) / 2.).min(screen_size.y - 1.) as i32;
     let draw_low_y = ((screen_size.y - line_height) / 2.).max(0.) as i32;
@@ -185,7 +190,7 @@ impl Raycaster {
       for y in draw_low_y..draw_high_y {
         let tex_y = clamp(tex_pos as i32, 0, texture.meta.height - 1);
         tex_pos += step;
-        texture.get(tex_x, tex_y, &mut pixel_color);
+        texture.get(texture.meta.width - 1 - tex_x /* XXX why the X flip ??? */, tex_y, &mut pixel_color);
         draw_pixel(frame, x, y, &pixel_color);
       }
     } else {

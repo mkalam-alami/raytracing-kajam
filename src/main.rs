@@ -11,6 +11,7 @@ mod raycaster;
 mod point;
 mod player;
 mod tileset;
+mod trigger;
 
 use pixels::Error;
 use crate::core::game::{Game, GameSettings};
