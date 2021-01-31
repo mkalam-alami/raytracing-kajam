@@ -27,7 +27,6 @@ impl MainScene {
 
         tileset.pick(Tileset::ceiling_color_id() as usize, &mut ceiling_color);
 
-        // XXX Use references over clones
         Self {
             ceiling_color,
             map_preview,
@@ -48,7 +47,7 @@ impl MainScene {
     pub fn draw(&self, frame: &mut [u8], game_state: &GameState) {
         fill(frame, &self.ceiling_color);
         self.raycaster.draw(&self.map, frame, &self.player, game_state);
-        self.map_preview.draw(frame);
+        // self.map_preview.draw(frame);
     }
 
 }

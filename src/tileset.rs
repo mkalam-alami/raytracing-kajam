@@ -32,6 +32,15 @@ impl Tileset {
         load_png("door_7.png"),
         load_png("door_8.png"),
         load_png("door_9.png"),
+
+        load_png("floor_m7.png"),
+        load_png("floor_p1.png"),
+        load_png("floor_p2.png"),
+        load_png("floor_p3.png"),
+        load_png("floor_m1.png"),
+        load_png("floor_m2.png"),
+        load_png("floor_m3.png"),
+
         load_png("you_win.png") // referenced as n - 1
       ].to_vec()
     }
@@ -86,7 +95,7 @@ impl Tileset {
   }
 
   pub fn is_textured(color_id: u8) -> bool {
-    color_id >= 19
+    color_id >= 19 || (color_id > 0 && color_id < 8)
   }
 
   pub fn get_texture(&self, color_id: u8) -> &Image {
@@ -94,13 +103,15 @@ impl Tileset {
       self.textures.get((color_id - 20) as usize).unwrap()
     } else if color_id == 19 {
       self.textures.get(self.textures.len() - 1).unwrap()
+    } else if color_id < 8 {
+      self.textures.get((color_id + 9) as usize).unwrap()
     } else {
       panic!("no texture for color_id {}", color_id);
     }
   }
 
   pub fn is_trigger(color_id: u8) -> bool {
-    color_id > 1 && color_id < 8
+    color_id >= 1 && color_id < 8
   }
 
   pub fn get_door_color_id(door_value: u8) -> u8 {

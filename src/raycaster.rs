@@ -6,8 +6,7 @@ use crate::map::Map;
 use crate::point::Point;
 use crate::player::Player;
 
-const THIRD_PERSON_OFFSET: f32 = 0.8;
-const FLASH_DURATION: f32 = 0.15;
+const FLASH_THICKNESS: f32 = 0.3;
 
 #[derive(Clone)]
 pub struct Raycaster {
@@ -58,34 +57,46 @@ impl Raycaster {
         x: player.pos.x + row_distance * ray_dir_0.x,
         y: player.pos.y + row_distance * ray_dir_0.y
       };
-      floor -= player.dir * THIRD_PERSON_OFFSET; // 3rd person view
+      floor -= player.dir * player.third_person_offset; // 3rd person view
 
       for x in 0..config::SCREEN_WIDTH {
         let cell_x = floor.x.floor() as isize;
         let cell_y = floor.y.floor() as isize;
         let color_id = *map.get(cell_x as usize, cell_y as usize).unwrap_or(&Tileset::default_floor_color_id());
         let current_cell = player.get_current_cell();
+        let is_drawing_current_cell = (cell_x, cell_y) == (current_cell.0 as isize, current_cell.1 as isize);
 
         floor += floor_step;
 
-        if (cell_x, cell_y) == (current_cell.0 as isize, current_cell.1 as isize)
-          && Tileset::is_trigger(color_id)
-          && game_state.frame_counter - player.cell_last_triggered < (FLASH_DURATION * TARGET_FPS as f32) as u32 {
-          // white flash on cell change
+        if is_drawing_current_cell && !Tileset::is_trigger(color_id) {
+          // white flash on current non-trigger cell
           pixel_color.copy_from_slice(&config::COLOR_WHITE);
         } else {
-          if Tileset::is_textured(color_id) {
-            if Tileset::is_rendered_as_floor(color_id) {
-              let texture = self.tileset.get_texture(color_id);
-              // get the texture coordinate from the fractional part
-              let tex_x = clamp((texture.meta.width as f32 * (floor.x - cell_x as f32)) as i32, 0, texture.meta.width - 1);
-              let tex_y = clamp((texture.meta.height as f32 * (floor.y - cell_y as f32)) as i32, 0, texture.meta.height - 1);
-              texture.get(tex_x, tex_y, &mut pixel_color);
-            } else {
-              self.tileset.pick(Tileset::default_floor_color_id() as usize, &mut pixel_color);
+          let mut is_color_picked = false;
+          if is_drawing_current_cell {
+            let thickness = clamp(FLASH_THICKNESS - (game_state.frame_counter - player.cell_last_triggered) as f32 / TARGET_FPS as f32, 0.0, FLASH_THICKNESS);
+            let is_tile_border = floor.x.fract() < thickness || floor.x.fract() > 1.0 - thickness
+              || floor.y.fract() < thickness || floor.y.fract() > 1.0 - thickness;
+            if is_tile_border {
+              pixel_color.copy_from_slice(&config::COLOR_WHITE);
+              is_color_picked = true;
             }
-          } else {
-            self.tileset.pick(color_id as usize, &mut pixel_color);
+          }
+
+          if !is_color_picked {
+            if Tileset::is_textured(color_id) {
+              if Tileset::is_rendered_as_floor(color_id) {
+                let texture = self.tileset.get_texture(color_id);
+                // get the texture coordinate from the fractional part
+                let tex_x = clamp((texture.meta.width as f32 * (floor.x - cell_x as f32)) as i32, 0, texture.meta.width - 1);
+                let tex_y = clamp((texture.meta.height as f32 * (floor.y - cell_y as f32)) as i32, 0, texture.meta.height - 1);
+                texture.get(tex_x, tex_y, &mut pixel_color);
+              } else {
+                self.tileset.pick(Tileset::default_floor_color_id() as usize, &mut pixel_color);
+              }
+            } else {
+              self.tileset.pick(color_id as usize, &mut pixel_color);
+            }
           }
         }
         draw_pixel(frame, x, y, &pixel_color);
@@ -95,7 +106,7 @@ impl Raycaster {
   }
 
   pub fn draw_walls(&self, map: &Map, frame: &mut [u8], player: &Player, screen_size: Point) {
-    let camera_pos = player.pos - player.dir * THIRD_PERSON_OFFSET; // 3rd person view
+    let camera_pos = player.pos - player.dir * player.third_person_offset;
 
     for x in 0..config::SCREEN_WIDTH {
       let camera_x = 2. * x as f32 / screen_size.x - 1.; // [-1;1]

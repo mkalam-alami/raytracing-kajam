@@ -20,7 +20,7 @@ The project is in it very early stages, setting up a basic game engine for the f
 - [x] Collisions
 - [x] Textured walls
 - [x] Tile-based movement
-- [ ] Gameplay!
-- [ ] Contents!
-- [ ] Use color blind friendly textures on floor
-- [ ] Use different tile flash system (white on normal tiles, a square on triggerable tiles)
+- [x] Use different tile flash system
+- [x] Gameplay!
+- [x] Contents!
+- [x] Use color blind friendly textures on floor

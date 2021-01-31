@@ -1,7 +1,6 @@
 use crate::main_scene::MainScene;
 use log::error;
 use pixels::{Error, Pixels, SurfaceTexture};
-use std::time::SystemTime;
 use winit::dpi::LogicalSize;
 use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -30,8 +29,8 @@ impl Game {
         let mut pixels = Game::create_pixels(settings, &window)?;
         let mut scene = settings.scene.clone();
 
-        let mut fps_start = SystemTime::now();
-        let mut fps_counter = 0;
+        // let mut fps_start = SystemTime::now();
+        // let mut fps_counter = 0;
         let mut game_state = GameState {
             frame_counter: 0
         };
@@ -39,12 +38,12 @@ impl Game {
         event_loop.run(move |event, _, control_flow| {
             // Draw the current frame
             if let Event::RedrawRequested(_) = event {
-                fps_counter += 1;
-                if SystemTime::now().duration_since(fps_start).unwrap().as_millis() >= 3000 {
-                    println!("FPS: {}", fps_counter / 3);
-                    fps_start = SystemTime::now();
-                    fps_counter = 0;
-                }
+                //fps_counter += 1;
+                //if SystemTime::now().duration_since(fps_start).unwrap().as_millis() >= 3000 {
+                    // println!("FPS: {}", fps_counter / 3);
+                    // fps_start = SystemTime::now();
+                    // fps_counter = 0;
+                //}
 
                 game_state.frame_counter += 1;
                 scene.draw(pixels.get_frame(), &game_state);
