@@ -1,4 +1,4 @@
-use crate::{palette::Palette, point::Point};
+use crate::{core::game::GameState, palette::Palette, point::Point};
 use crate::player::Player;
 use crate::raycaster::Raycaster;
 use crate::{core::colors, entity::Entity};
@@ -29,12 +29,12 @@ impl MainScene {
         }
     }
 
-    pub fn update(&mut self, input: &WinitInputHelper) {
-        self.player.update(input);
+    pub fn update(&mut self, input: &WinitInputHelper, game_state: &GameState) {
+        self.player.update(input, game_state);
     }
 
     /// Assumes the default texture format: [`wgpu::TextureFormat::Rgba8UnormSrgb`]
-    pub fn draw(&self, frame: &mut [u8]) {
+    pub fn draw(&self, frame: &mut [u8], _game_state: &GameState) {
         fill(frame, &colors::COLOR_DARK_BLUE);
         self.raycaster.draw(frame, &self.player);
         self.map_preview.draw(frame);

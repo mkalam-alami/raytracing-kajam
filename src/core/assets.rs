@@ -1,7 +1,7 @@
 use png::Transformations;
 use std::fs::File;
 
-use super::config::Color;
+use super::colors::Color;
 
 #[derive(Clone)]
 pub struct ImageMetadata {

@@ -18,6 +18,68 @@ impl Raycaster {
 
   pub fn draw(&self, frame: &mut [u8], player: &Player) {
     let screen_size = Point { x: config::SCREEN_WIDTH as f32, y: config::SCREEN_HEIGHT as f32 };
+
+    self.draw_floor(frame, player, screen_size);
+    self.draw_walls(frame, player, screen_size);
+  }
+
+  pub fn draw_floor(&self, frame: &mut [u8], player: &Player, screen_size: Point) {
+    let camera_plane = player.get_camera_plane();
+    let mut pixel_color: Color = Default::default();
+
+    for y in config::SCREEN_HEIGHT/2..config::SCREEN_HEIGHT {
+      // rayDir for leftmost ray (x = 0) and rightmost ray (x = w)
+      let ray_dir_0 = Point {
+        x: player.dir.x - camera_plane.x,
+        y: player.dir.y - camera_plane.y
+      };
+      let ray_dir_1 = Point {
+        x: player.dir.x + camera_plane.x,
+        y: player.dir.y + camera_plane.y
+      };
+
+
+      let p = (y - config::SCREEN_HEIGHT / 2) as f32; // Current y position compared to the center of the screen (the horizon)
+      let pos_z = 0.5 * screen_size.y; // Vertical position of the camera.
+      let row_distance = pos_z / p;  // Horizontal distance from the camera to the floor for the current row. 0.5 is the z position exactly in the middle between floor and ceiling.
+
+      // calculate the real world step vector we have to add for each x (parallel to camera plane)
+      // adding step by step avoids multiplications with a weight in the inner loop
+      let floor_step = Point {
+        x: row_distance * (ray_dir_1.x - ray_dir_0.x) / screen_size.x,
+        y: row_distance * (ray_dir_1.y - ray_dir_0.y) / screen_size.x
+      };
+
+      // real world coordinates of the leftmost column. This will be updated as we step to the right.
+      let mut floor = Point {
+        x: player.pos.x + row_distance * ray_dir_0.x,
+        y: player.pos.y + row_distance * ray_dir_0.y
+      };
+
+      for x in 0..config::SCREEN_WIDTH {
+        let cell_x = floor.x.floor() as i32;
+        let cell_y = floor.y.floor() as i32;
+
+        floor += floor_step;
+
+        if (cell_x, cell_y) == player.current_cell() {
+          pixel_color.copy_from_slice(&config::COLOR_WHITE);
+        } else {
+          let texture = self.palette.textures.get(0).unwrap();
+
+          // get the texture coordinate from the fractional part
+          let tex_x = clamp((texture.meta.width as f32 * (floor.x - cell_x as f32)) as i32, 0, texture.meta.width - 1);
+          let tex_y = clamp((texture.meta.height as f32 * (floor.y - cell_y as f32)) as i32, 0, texture.meta.height - 1);
+
+          texture.get(tex_x, tex_y, &mut pixel_color);
+        }
+        draw_pixel(frame, x, y, &pixel_color);
+      }
+    }
+
+  }
+
+  pub fn draw_walls(&self, frame: &mut [u8], player: &Player, screen_size: Point) {
     for x in 0..config::SCREEN_WIDTH {
       let camera_x = 2. * x as f32 / screen_size.x - 1.; // [-1;1]
       let ray_dir = player.dir + player.get_camera_plane() * camera_x;
@@ -90,12 +152,12 @@ impl Raycaster {
         } else {
           (map_coords.x - player.pos.x + (1. - step.x) / 2.) / ray_dir.x
         };
-        self.draw_column(frame, hit, x, player.pos, side, perp_wall_dist, ray_dir, screen_size);
+        self.draw_wall_column(frame, hit, x, player.pos, side, perp_wall_dist, ray_dir, screen_size);
       }
     }
   }
 
-  fn draw_column(&self, frame: &mut [u8], hit: i8, x: i32, pos: Point, side: bool, perp_wall_dist: f32, ray_dir: Point, screen_size: Point) {
+  fn draw_wall_column(&self, frame: &mut [u8], hit: i8, x: i32, pos: Point, side: bool, perp_wall_dist: f32, ray_dir: Point, screen_size: Point) {
     let line_height = screen_size.y / perp_wall_dist;
     let draw_high_y = ((screen_size.y + line_height) / 2.).min(screen_size.y - 1.) as i32;
     let draw_low_y = ((screen_size.y - line_height) / 2.).max(0.) as i32;
@@ -106,7 +168,7 @@ impl Raycaster {
     } else {
       let texture = self.palette.textures.get(0).unwrap();
 
-      let tex_x = self.calc_tex_x(texture, pos, side, perp_wall_dist, ray_dir);
+      let tex_x = self.calc_wall_tex_x(texture, pos, side, perp_wall_dist, ray_dir);
 
 
       let mut pixel_color: Color = Default::default();
@@ -121,7 +183,7 @@ impl Raycaster {
     }
   }
 
-  fn calc_tex_x(&self, texture: &Image, pos: Point, side: bool, perp_wall_dist: f32, ray_dir: Point) -> i32 {
+  fn calc_wall_tex_x(&self, texture: &Image, pos: Point, side: bool, perp_wall_dist: f32, ray_dir: Point) -> i32 {
     let mut wall_x: f32;
     if side {
       wall_x = pos.x + perp_wall_dist * ray_dir.x;

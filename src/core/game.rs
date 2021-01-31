@@ -17,6 +17,10 @@ pub struct GameSettings {
     pub scene: MainScene, // TODO figure out how to use a trait without annoying the compiler with dynamic sizes
 }
 
+pub struct GameState {
+    pub frame_counter: u32
+}
+
 pub struct Game;
 impl Game {
     pub fn run(settings: &GameSettings) -> Result<(), Error> {
@@ -28,6 +32,9 @@ impl Game {
 
         let mut fps_start = SystemTime::now();
         let mut fps_counter = 0;
+        let mut game_state = GameState {
+            frame_counter: 0
+        };
 
         event_loop.run(move |event, _, control_flow| {
             // Draw the current frame
@@ -39,7 +46,8 @@ impl Game {
                     fps_counter = 0;
                 }
 
-                scene.draw(pixels.get_frame());
+                game_state.frame_counter += 1;
+                scene.draw(pixels.get_frame(), &game_state);
                 if pixels
                     .render()
                     .map_err(|e| error!("pixels.render() failed: {}", e))
@@ -64,7 +72,7 @@ impl Game {
                 }
 
                 // Update internal state and request a redraw
-                scene.update(&input);
+                scene.update(&input, &game_state);
                 window.request_redraw();
             }
         });
