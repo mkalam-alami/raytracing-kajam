@@ -26,11 +26,11 @@ impl Image {
 
 pub fn load_png(path: &str) -> Image {
   let mut full_path = String::new();
-  full_path.push_str("src/assets/"); // TODO Better handling of dev vs. build
+  full_path.push_str("src/assets/");
   full_path.push_str(path);
 
   let mut build_full_path = String::new();
-  build_full_path.push_str("assets/"); // TODO Better handling of dev vs. build
+  build_full_path.push_str("assets/");
   build_full_path.push_str(path);
 
   // println!("{}", current_dir().unwrap().to_str().unwrap());

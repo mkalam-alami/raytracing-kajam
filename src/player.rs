@@ -2,7 +2,7 @@ use crate::{core::game::GameState, map::Map, point::Point};
 use winit::event::VirtualKeyCode;
 use winit_input_helper::WinitInputHelper;
 
-const MOV_SPEED: f32 = 0.04;
+const MOV_SPEED: f32 = 0.065;
 const ROT_SPEED: f32 = 3.0;
 const PLAYER_SIZE: f32 = 0.4 / MOV_SPEED;
 
@@ -28,12 +28,12 @@ impl Player {
         self.dir.rotate(90.) * 0.66
     }
 
-    pub fn current_cell(&self) -> (i32, i32) {
+    pub fn get_current_cell(&self) -> (i32, i32) {
         (self.pos.x.floor() as i32, self.pos.y.floor() as i32)
     }
 
     pub fn update(&mut self, input: &WinitInputHelper, game_state: &GameState) {
-        let current_cell = self.current_cell();
+        let current_cell = self.get_current_cell();
 
         if input.key_held(VirtualKeyCode::Left) {
             self.dir = self.dir.rotate(-ROT_SPEED);
@@ -65,8 +65,16 @@ impl Player {
             self.pos.y = self.pos.y + dpos.y;
         }
 
-        if self.current_cell() != current_cell {
+        if self.get_current_cell() != current_cell {
           self.in_cell_since = game_state.frame_counter;
+        }
+
+        // snap to cell center
+        let snap_pos = self.get_current_cell();
+        let snap_strength: f32 = if dpos.get_magnitude() > 0.0 { 0.045 } else { 0.3 };
+        self.pos = Point {
+          x: (self.pos.x + (snap_pos.0 as f32 + 0.5) * snap_strength) / (1. + snap_strength),
+          y: (self.pos.y + (snap_pos.1 as f32 + 0.5) * snap_strength) / (1. + snap_strength),
         }
     }
 }

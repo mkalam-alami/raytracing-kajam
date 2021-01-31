@@ -4,6 +4,8 @@ use crate::map::Map;
 use crate::point::Point;
 use crate::player::Player;
 
+const THIRD_PERSON_OFFSET: f32 = 0.8;
+
 #[derive(Clone)]
 pub struct Raycaster {
   map: Map,
@@ -55,6 +57,7 @@ impl Raycaster {
         x: player.pos.x + row_distance * ray_dir_0.x,
         y: player.pos.y + row_distance * ray_dir_0.y
       };
+      floor -= player.dir * THIRD_PERSON_OFFSET; // 3rd person view
 
       for x in 0..config::SCREEN_WIDTH {
         let cell_x = floor.x.floor() as i32;
@@ -62,7 +65,7 @@ impl Raycaster {
 
         floor += floor_step;
 
-        if (cell_x, cell_y) == player.current_cell() {
+        if (cell_x, cell_y) == player.get_current_cell() {
           pixel_color.copy_from_slice(&config::COLOR_WHITE);
         } else {
           let texture = self.palette.textures.get(0).unwrap();
@@ -80,11 +83,13 @@ impl Raycaster {
   }
 
   pub fn draw_walls(&self, frame: &mut [u8], player: &Player, screen_size: Point) {
+    let camera_pos = player.pos - player.dir * THIRD_PERSON_OFFSET; // 3rd person view
+
     for x in 0..config::SCREEN_WIDTH {
       let camera_x = 2. * x as f32 / screen_size.x - 1.; // [-1;1]
       let ray_dir = player.dir + player.get_camera_plane() * camera_x;
 
-      let mut map_coords = player.pos.floor();
+      let mut map_coords = camera_pos.floor();
       let delta_dist = Point::new(
         if ray_dir.y == 0. {
           0.
@@ -106,17 +111,17 @@ impl Raycaster {
       let mut side_dist = Point::new(0., 0.); //length of ray from current position to next x or y-side
       if ray_dir.x < 0. {
         step.x = -1.;
-        side_dist.x = (player.pos.x - map_coords.x) * delta_dist.x;
+        side_dist.x = (camera_pos.x - map_coords.x) * delta_dist.x;
       } else {
         step.x = 1.;
-        side_dist.x = (map_coords.x + 1. - player.pos.x) * delta_dist.x;
+        side_dist.x = (map_coords.x + 1. - camera_pos.x) * delta_dist.x;
       }
       if ray_dir.y < 0. {
         step.y = -1.;
-        side_dist.y = (player.pos.y - map_coords.y) * delta_dist.y;
+        side_dist.y = (camera_pos.y - map_coords.y) * delta_dist.y;
       } else {
         step.y = 1.;
-        side_dist.y = (map_coords.y + 1. - player.pos.y) * delta_dist.y;
+        side_dist.y = (map_coords.y + 1. - camera_pos.y) * delta_dist.y;
       }
 
       let mut hit = 0 as i8; // hit wall value
@@ -148,11 +153,11 @@ impl Raycaster {
 
       if hit > 0 {
         let perp_wall_dist = if side {
-          (map_coords.y - player.pos.y + (1. - step.y) / 2.) / ray_dir.y
+          (map_coords.y - camera_pos.y + (1. - step.y) / 2.) / ray_dir.y
         } else {
-          (map_coords.x - player.pos.x + (1. - step.x) / 2.) / ray_dir.x
+          (map_coords.x - camera_pos.x + (1. - step.x) / 2.) / ray_dir.x
         };
-        self.draw_wall_column(frame, hit, x, player.pos, side, perp_wall_dist, ray_dir, screen_size);
+        self.draw_wall_column(frame, hit, x, camera_pos, side, perp_wall_dist, ray_dir, screen_size);
       }
     }
   }
