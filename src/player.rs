@@ -1,21 +1,24 @@
-use crate::point::Point;
+use crate::{map::Map, point::Point};
 use winit::event::VirtualKeyCode;
 use winit_input_helper::WinitInputHelper;
 
 const MOV_SPEED: f32 = 0.03;
-const ROT_SPEED: f32 = 1.6;
+const ROT_SPEED: f32 = 1.9;
+const PLAYER_SIZE: f32 = 0.4 / MOV_SPEED;
 
 #[derive(Clone)]
 pub struct Player {
   pub pos: Point,
-  pub dir: Point
+  pub dir: Point,
+  pub map: Box<Map>
 }
 
 impl Player {
-  pub fn new(pos: Point, dir: Point) -> Self {
+  pub fn new(pos: Point, dir: Point, map: Box<Map>) -> Self {
     Self {
       pos: pos.clone(),
-      dir: dir.clone()
+      dir: dir.clone(),
+      map
     }
   }
 
@@ -24,18 +27,28 @@ impl Player {
   }
 
   pub fn update(&mut self, input: &WinitInputHelper) {
-      // XXX Use dir vector
       if input.key_held(VirtualKeyCode::Left) {
         self.dir = self.dir.rotate(-ROT_SPEED);
       }
       if input.key_held(VirtualKeyCode::Right) {
         self.dir = self.dir.rotate(ROT_SPEED);
       }
+
+      let mut dpos = Point::new(0., 0.);
       if input.key_held(VirtualKeyCode::Up) {
-        self.pos += self.dir * MOV_SPEED;
+        dpos = self.dir * MOV_SPEED;
       }
       if input.key_held(VirtualKeyCode::Down) {
-        self.pos -= self.dir * MOV_SPEED;
+        dpos = self.dir * -MOV_SPEED;
+      }
+
+      let dx_collision = self.map.as_ref().get((self.pos.x + (dpos.x * PLAYER_SIZE)) as usize, self.pos.y as usize);
+      if Some(&0) == dx_collision {
+        self.pos.x = self.pos.x + dpos.x;
+      }
+      let dy_collision = self.map.as_ref().get(self.pos.x as usize, (self.pos.y + (dpos.y * PLAYER_SIZE)) as usize);
+      if Some(&0) == dy_collision {
+        self.pos.y = self.pos.y + dpos.y;
       }
   }
 }

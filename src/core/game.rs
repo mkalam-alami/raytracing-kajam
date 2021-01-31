@@ -33,8 +33,7 @@ impl Game {
             // Draw the current frame
             if let Event::RedrawRequested(_) = event {
                 fps_counter += 1;
-                let now = SystemTime::now();
-                if now.duration_since(fps_start).unwrap().as_millis() >= 3000 {
+                if SystemTime::now().duration_since(fps_start).unwrap().as_millis() >= 3000 {
                     println!("FPS: {}", fps_counter / 3);
                     fps_start = SystemTime::now();
                     fps_counter = 0;

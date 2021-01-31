@@ -25,7 +25,7 @@ impl MainScene {
         Self {
             map_preview,
             raycaster: Raycaster::new(map.clone(), palette.clone()),
-            player: Player::new(map.spawn_pos.clone(), map.spawn_dir.clone())
+            player: Player::new(map.spawn_pos.clone(), map.spawn_dir.clone(), Box::new(map))
         }
     }
 
