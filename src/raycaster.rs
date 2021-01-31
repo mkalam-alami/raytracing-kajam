@@ -1,4 +1,4 @@
-use crate::{core::{assets::Image, colors::Color, draw::draw_pixel, math::clamp}, palette::Palette};
+use crate::{core::{assets::Image, colors::Color, draw::{draw_pixel, draw_straight_line}, math::clamp}, palette::Palette};
 use crate::core::config;
 use crate::map::Map;
 use crate::point::Point;
@@ -90,28 +90,34 @@ impl Raycaster {
         } else {
           (map_coords.x - player.pos.x + (1. - step.x) / 2.) / ray_dir.x
         };
-        self.draw_column(frame, x, player.pos, side, perp_wall_dist, ray_dir, screen_size);
+        self.draw_column(frame, hit, x, player.pos, side, perp_wall_dist, ray_dir, screen_size);
       }
     }
   }
 
-  fn draw_column(&self, frame: &mut [u8], x: i32, pos: Point, side: bool, perp_wall_dist: f32, ray_dir: Point, screen_size: Point) {
-    let texture = self.palette.textures.get(0).unwrap();
-
-    let tex_x = self.calc_tex_x(texture, pos, side, perp_wall_dist, ray_dir);
-
+  fn draw_column(&self, frame: &mut [u8], hit: i8, x: i32, pos: Point, side: bool, perp_wall_dist: f32, ray_dir: Point, screen_size: Point) {
     let line_height = screen_size.y / perp_wall_dist;
     let draw_high_y = ((screen_size.y + line_height) / 2.).min(screen_size.y - 1.) as i32;
     let draw_low_y = ((screen_size.y - line_height) / 2.).max(0.) as i32;
 
-    let mut pixel_color: Color = Default::default();
-    let step = (texture.meta.height as f32) / line_height;
-    let mut tex_pos = (draw_low_y as f32 - screen_size.y / 2. + line_height / 2.) * step;
-    for y in draw_low_y..draw_high_y {
-      let tex_y = clamp(tex_pos as i32, 0, texture.meta.height - 1);
-      tex_pos += step;
-      texture.get(tex_x, tex_y, &mut pixel_color);
-      draw_pixel(frame, x, y, &pixel_color);
+    if hit > 3 {
+      let color = self.palette.pick(hit as usize);
+      draw_straight_line(frame, x, draw_low_y, x, draw_high_y, &color);
+    } else {
+      let texture = self.palette.textures.get(0).unwrap();
+
+      let tex_x = self.calc_tex_x(texture, pos, side, perp_wall_dist, ray_dir);
+
+
+      let mut pixel_color: Color = Default::default();
+      let step = (texture.meta.height as f32) / line_height;
+      let mut tex_pos = (draw_low_y as f32 - screen_size.y / 2. + line_height / 2.) * step;
+      for y in draw_low_y..draw_high_y {
+        let tex_y = clamp(tex_pos as i32, 0, texture.meta.height - 1);
+        tex_pos += step;
+        texture.get(tex_x, tex_y, &mut pixel_color);
+        draw_pixel(frame, x, y, &pixel_color);
+      }
     }
   }
 
