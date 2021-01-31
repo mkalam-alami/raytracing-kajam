@@ -17,11 +17,8 @@ The project is in it very early stages, setting up a basic game engine for the f
 - [x] Load palette from PNG
 - [x] Load map from PNG
 - [x] Player movement
-- [ ] Accurate time handling
-- [ ] Solve WGPU memory leak
-- [ ] Collisions
-- [ ] Textured walls
-- [ ] Tile-based movement
+- [x] Collisions
+- [x] Textured walls
+- [x] Tile-based movement
 - [ ] Gameplay!
-- [ ] Consider audio
 

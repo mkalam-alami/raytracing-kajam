@@ -1,4 +1,4 @@
-use crate::{core::{assets::Image, colors::Color, draw::{draw_pixel, draw_straight_line}, math::clamp}, palette::Palette};
+use crate::{core::{assets::Image, colors::Color, draw::{draw_pixel, draw_straight_line}, game::GameState, math::clamp}, palette::{Palette}};
 use crate::core::config;
 use crate::map::Map;
 use crate::point::Point;
@@ -18,18 +18,18 @@ impl Raycaster {
     Self { map, palette }
   }
 
-  pub fn draw(&self, frame: &mut [u8], player: &Player) {
+  pub fn draw(&self, frame: &mut [u8], player: &Player, game_state: &GameState) {
     let screen_size = Point { x: config::SCREEN_WIDTH as f32, y: config::SCREEN_HEIGHT as f32 };
 
-    self.draw_floor(frame, player, screen_size);
+    self.draw_floor(frame, player, screen_size, game_state);
     self.draw_walls(frame, player, screen_size);
   }
 
-  pub fn draw_floor(&self, frame: &mut [u8], player: &Player, screen_size: Point) {
+  pub fn draw_floor(&self, frame: &mut [u8], player: &Player, screen_size: Point, game_state: &GameState) {
     let camera_plane = player.get_camera_plane();
     let mut pixel_color: Color = Default::default();
 
-    for y in config::SCREEN_HEIGHT/2..config::SCREEN_HEIGHT {
+    for y in config::SCREEN_HEIGHT/2+1..config::SCREEN_HEIGHT {
       // rayDir for leftmost ray (x = 0) and rightmost ray (x = w)
       let ray_dir_0 = Point {
         x: player.dir.x - camera_plane.x,
@@ -39,7 +39,6 @@ impl Raycaster {
         x: player.dir.x + camera_plane.x,
         y: player.dir.y + camera_plane.y
       };
-
 
       let p = (y - config::SCREEN_HEIGHT / 2) as f32; // Current y position compared to the center of the screen (the horizon)
       let pos_z = 0.5 * screen_size.y; // Vertical position of the camera.
@@ -65,16 +64,24 @@ impl Raycaster {
 
         floor += floor_step;
 
-        if (cell_x, cell_y) == player.get_current_cell() {
+        if (cell_x, cell_y) == player.get_current_cell() && game_state.frame_counter - player.in_cell_since < (0.25 * 60.0/*FPS*/) as u32  {
+          // white flash on cell change
           pixel_color.copy_from_slice(&config::COLOR_WHITE);
         } else {
-          let texture = self.palette.textures.get(0).unwrap();
-
-          // get the texture coordinate from the fractional part
-          let tex_x = clamp((texture.meta.width as f32 * (floor.x - cell_x as f32)) as i32, 0, texture.meta.width - 1);
-          let tex_y = clamp((texture.meta.height as f32 * (floor.y - cell_y as f32)) as i32, 0, texture.meta.height - 1);
-
-          texture.get(tex_x, tex_y, &mut pixel_color);
+          let color_id = *self.map.get(cell_x as usize, cell_y as usize).unwrap_or(&Palette::default_floor_color_id()) as i8;
+          if Palette::is_textured(color_id) {
+            if Palette::is_rendered_as_floor(color_id) {
+              let texture = self.palette.get_texture(color_id);
+              // get the texture coordinate from the fractional part
+              let tex_x = clamp((texture.meta.width as f32 * (floor.x - cell_x as f32)) as i32, 0, texture.meta.width - 1);
+              let tex_y = clamp((texture.meta.height as f32 * (floor.y - cell_y as f32)) as i32, 0, texture.meta.height - 1);
+              texture.get(tex_x, tex_y, &mut pixel_color);
+            } else {
+              self.palette.pick(Palette::default_floor_color_id() as usize, &mut pixel_color);
+            }
+          } else {
+            self.palette.pick(color_id as usize, &mut pixel_color);
+          }
         }
         draw_pixel(frame, x, y, &pixel_color);
       }
@@ -124,11 +131,11 @@ impl Raycaster {
         side_dist.y = (map_coords.y + 1. - camera_pos.y) * delta_dist.y;
       }
 
-      let mut hit = 0 as i8; // hit wall value
+      let mut hit = -1 as i8; // hit wall value
       let mut side = false; // was a NS or a EW wall hit?
 
       // perform DDA
-      while hit == 0 {
+      while hit == -1 {
         // jump to next map square, OR in x-direction, OR in y-direction
         if side_dist.x < side_dist.y {
           side_dist.x += delta_dist.x;
@@ -143,15 +150,15 @@ impl Raycaster {
         // check if ray has hit a wall
         let tile = self.map.get(map_coords.x as usize, map_coords.y as usize);
         if let Some(tile_value) = tile {
-          if *tile_value > 0 {
+          if Palette::is_rendered_as_wall(*tile_value as i8) {
             hit = *tile_value as i8;
           }
         } else {
-          hit = -1;
+          hit = Palette::default_wall_color_id() as i8;
         }
       }
 
-      if hit > 0 {
+      if Palette::is_rendered_as_wall(hit) {
         let perp_wall_dist = if side {
           (map_coords.y - camera_pos.y + (1. - step.y) / 2.) / ray_dir.y
         } else {
@@ -167,14 +174,10 @@ impl Raycaster {
     let draw_high_y = ((screen_size.y + line_height) / 2.).min(screen_size.y - 1.) as i32;
     let draw_low_y = ((screen_size.y - line_height) / 2.).max(0.) as i32;
 
-    if hit > 3 {
-      let color = self.palette.pick(hit as usize);
-      draw_straight_line(frame, x, draw_low_y, x, draw_high_y, &color);
-    } else {
-      let texture = self.palette.textures.get(0).unwrap();
+    if Palette::is_textured(hit) {
+      let texture = self.palette.get_texture(hit);
 
       let tex_x = self.calc_wall_tex_x(texture, pos, side, perp_wall_dist, ray_dir);
-
 
       let mut pixel_color: Color = Default::default();
       let step = (texture.meta.height as f32) / line_height;
@@ -185,6 +188,10 @@ impl Raycaster {
         texture.get(tex_x, tex_y, &mut pixel_color);
         draw_pixel(frame, x, y, &pixel_color);
       }
+    } else {
+      let mut color: Color = Default::default();
+      self.palette.pick(hit as usize, &mut color);
+      draw_straight_line(frame, x, draw_low_y, x, draw_high_y, &color);
     }
   }
 

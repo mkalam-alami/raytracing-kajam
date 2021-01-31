@@ -1,8 +1,8 @@
-use crate::{core::game::GameState, map::Map, point::Point};
+use crate::{core::game::GameState, map::Map, palette::Palette, point::Point};
 use winit::event::VirtualKeyCode;
 use winit_input_helper::WinitInputHelper;
 
-const MOV_SPEED: f32 = 0.065;
+const MOV_SPEED: f32 = 0.063;
 const ROT_SPEED: f32 = 3.0;
 const PLAYER_SIZE: f32 = 0.4 / MOV_SPEED;
 
@@ -54,15 +54,16 @@ impl Player {
             (self.pos.x + (dpos.x * PLAYER_SIZE)) as usize,
             self.pos.y as usize,
         );
-        if Some(&0) == dx_collision {
+        if dx_collision.is_some() && !Palette::is_colliding(*dx_collision.unwrap() as i8) {
             self.pos.x = self.pos.x + dpos.x;
         }
+
         let dy_collision = self.map.as_ref().get(
             self.pos.x as usize,
             (self.pos.y + (dpos.y * PLAYER_SIZE)) as usize,
         );
-        if Some(&0) == dy_collision {
-            self.pos.y = self.pos.y + dpos.y;
+        if dy_collision.is_some() && !Palette::is_colliding(*dy_collision.unwrap() as i8) {
+          self.pos.y = self.pos.y + dpos.y;
         }
 
         if self.get_current_cell() != current_cell {
