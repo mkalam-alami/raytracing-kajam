@@ -3,7 +3,7 @@ use winit::event::VirtualKeyCode;
 use winit_input_helper::WinitInputHelper;
 
 const MOV_SPEED: f32 = 0.08;
-const ROT_SPEED: f32 = 3.0;
+const ROT_SPEED: f32 = 4.0;
 const PLAYER_SIZE: f32 = 0.4 / MOV_SPEED;
 const TRIGGER_PERIOD: f32 = 0.5;
 const PASSIVE_SNAP: f32 = 0.25;

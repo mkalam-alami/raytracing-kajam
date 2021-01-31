@@ -1,4 +1,6 @@
 
+use core::panic;
+
 use crate::core::{assets::{Image, load_png}, colors::Color};
 
 #[allow(dead_code)]
@@ -29,7 +31,8 @@ impl Tileset {
         load_png("door_6.png"),
         load_png("door_7.png"),
         load_png("door_8.png"),
-        load_png("door_9.png")
+        load_png("door_9.png"),
+        load_png("you_win.png") // referenced as n - 1
       ].to_vec()
     }
   }
@@ -47,11 +50,11 @@ impl Tileset {
   }
 
   pub fn ceiling_color_id() -> u8 {
-    10
+    18
   }
 
   pub fn default_floor_color_id() -> u8 {
-    1
+    0
   }
 
   pub fn default_wall_color_id() -> u8 {
@@ -83,11 +86,17 @@ impl Tileset {
   }
 
   pub fn is_textured(color_id: u8) -> bool {
-    color_id >= 20
+    color_id >= 19
   }
 
   pub fn get_texture(&self, color_id: u8) -> &Image {
-    self.textures.get((color_id - 20) as usize).unwrap()
+    if color_id >= 20 {
+      self.textures.get((color_id - 20) as usize).unwrap()
+    } else if color_id == 19 {
+      self.textures.get(self.textures.len() - 1).unwrap()
+    } else {
+      panic!("no texture for color_id {}", color_id);
+    }
   }
 
   pub fn is_trigger(color_id: u8) -> bool {
