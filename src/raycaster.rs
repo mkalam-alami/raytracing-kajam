@@ -1,4 +1,4 @@
-use crate::{core::{assets::Image, colors::Color, draw::{draw_pixel, draw_straight_line}, game::GameState, math::clamp}, palette::{Palette}};
+use crate::{core::{assets::Image, colors::Color, draw::{draw_pixel, draw_straight_line}, game::GameState, math::clamp}, tileset::{Tileset}};
 use crate::core::config;
 use crate::map::Map;
 use crate::point::Point;
@@ -9,13 +9,13 @@ const THIRD_PERSON_OFFSET: f32 = 0.8;
 #[derive(Clone)]
 pub struct Raycaster {
   map: Map,
-  palette: Palette
+  tileset: Tileset
 }
 
 #[allow(dead_code)]
 impl Raycaster {
-  pub fn new(map: Map, palette: Palette) -> Self {
-    Self { map, palette }
+  pub fn new(map: Map, tileset: Tileset) -> Self {
+    Self { map, tileset }
   }
 
   pub fn draw(&self, frame: &mut [u8], player: &Player, game_state: &GameState) {
@@ -68,19 +68,19 @@ impl Raycaster {
           // white flash on cell change
           pixel_color.copy_from_slice(&config::COLOR_WHITE);
         } else {
-          let color_id = *self.map.get(cell_x as usize, cell_y as usize).unwrap_or(&Palette::default_floor_color_id()) as i8;
-          if Palette::is_textured(color_id) {
-            if Palette::is_rendered_as_floor(color_id) {
-              let texture = self.palette.get_texture(color_id);
+          let color_id = *self.map.get(cell_x as usize, cell_y as usize).unwrap_or(&Tileset::default_floor_color_id()) as i8;
+          if Tileset::is_textured(color_id) {
+            if Tileset::is_rendered_as_floor(color_id) {
+              let texture = self.tileset.get_texture(color_id);
               // get the texture coordinate from the fractional part
               let tex_x = clamp((texture.meta.width as f32 * (floor.x - cell_x as f32)) as i32, 0, texture.meta.width - 1);
               let tex_y = clamp((texture.meta.height as f32 * (floor.y - cell_y as f32)) as i32, 0, texture.meta.height - 1);
               texture.get(tex_x, tex_y, &mut pixel_color);
             } else {
-              self.palette.pick(Palette::default_floor_color_id() as usize, &mut pixel_color);
+              self.tileset.pick(Tileset::default_floor_color_id() as usize, &mut pixel_color);
             }
           } else {
-            self.palette.pick(color_id as usize, &mut pixel_color);
+            self.tileset.pick(color_id as usize, &mut pixel_color);
           }
         }
         draw_pixel(frame, x, y, &pixel_color);
@@ -150,15 +150,15 @@ impl Raycaster {
         // check if ray has hit a wall
         let tile = self.map.get(map_coords.x as usize, map_coords.y as usize);
         if let Some(tile_value) = tile {
-          if Palette::is_rendered_as_wall(*tile_value as i8) {
+          if Tileset::is_rendered_as_wall(*tile_value as i8) {
             hit = *tile_value as i8;
           }
         } else {
-          hit = Palette::default_wall_color_id() as i8;
+          hit = Tileset::default_wall_color_id() as i8;
         }
       }
 
-      if Palette::is_rendered_as_wall(hit) {
+      if Tileset::is_rendered_as_wall(hit) {
         let perp_wall_dist = if side {
           (map_coords.y - camera_pos.y + (1. - step.y) / 2.) / ray_dir.y
         } else {
@@ -174,8 +174,8 @@ impl Raycaster {
     let draw_high_y = ((screen_size.y + line_height) / 2.).min(screen_size.y - 1.) as i32;
     let draw_low_y = ((screen_size.y - line_height) / 2.).max(0.) as i32;
 
-    if Palette::is_textured(hit) {
-      let texture = self.palette.get_texture(hit);
+    if Tileset::is_textured(hit) {
+      let texture = self.tileset.get_texture(hit);
 
       let tex_x = self.calc_wall_tex_x(texture, pos, side, perp_wall_dist, ray_dir);
 
@@ -190,7 +190,7 @@ impl Raycaster {
       }
     } else {
       let mut color: Color = Default::default();
-      self.palette.pick(hit as usize, &mut color);
+      self.tileset.pick(hit as usize, &mut color);
       draw_straight_line(frame, x, draw_low_y, x, draw_high_y, &color);
     }
   }

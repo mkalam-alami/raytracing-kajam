@@ -1,4 +1,4 @@
-use crate::{core::{colors::Color, game::GameState}, palette::Palette, point::Point};
+use crate::{core::{colors::Color, game::GameState}, tileset::Tileset, point::Point};
 use crate::player::Player;
 use crate::raycaster::Raycaster;
 use crate::{entity::Entity};
@@ -17,19 +17,19 @@ pub struct MainScene {
 
 impl MainScene {
     pub fn new() -> Self {
-        let palette = Palette::new("palette.png");
-        let map = Map::new("map.png", palette.clone());
+        let tileset = Tileset::new("palette.png");
+        let map = Map::new("map.png", tileset.clone());
         let mut map_preview = Entity::new(EntityShape::IMAGE("map.png".to_string()));
         map_preview.pos += Point::new(10., 10.);
         let mut ceiling_color: Color = Default::default();
 
-        palette.pick(Palette::ceiling_color_id() as usize, &mut ceiling_color);
+        tileset.pick(Tileset::ceiling_color_id() as usize, &mut ceiling_color);
 
         // XXX Use references over clones
         Self {
             ceiling_color,
             map_preview,
-            raycaster: Raycaster::new(map.clone(), palette),
+            raycaster: Raycaster::new(map.clone(), tileset),
             player: Player::new(map.spawn_pos.clone(), map.spawn_dir.clone(), Box::new(map))
         }
     }

@@ -10,7 +10,7 @@ mod map;
 mod raycaster;
 mod point;
 mod player;
-mod palette;
+mod tileset;
 
 use pixels::Error;
 use crate::core::game::{Game, GameSettings};
@@ -23,7 +23,7 @@ fn main() -> Result<(), Error> {
     let game_settings = GameSettings {
         width: config::SCREEN_WIDTH as u32,
         height: config::SCREEN_HEIGHT as u32,
-        title: "Raycasting Kajam".to_string(),
+        title: "Dancefloor Escape".to_string(),
         scene: MainScene::new()
     };
 

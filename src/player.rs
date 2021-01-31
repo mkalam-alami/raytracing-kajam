@@ -1,4 +1,4 @@
-use crate::{core::game::GameState, map::Map, palette::Palette, point::Point};
+use crate::{core::game::GameState, map::Map, tileset::Tileset, point::Point};
 use winit::event::VirtualKeyCode;
 use winit_input_helper::WinitInputHelper;
 
@@ -54,7 +54,7 @@ impl Player {
             (self.pos.x + (dpos.x * PLAYER_SIZE)) as usize,
             self.pos.y as usize,
         );
-        if dx_collision.is_some() && !Palette::is_colliding(*dx_collision.unwrap() as i8) {
+        if dx_collision.is_some() && !Tileset::is_colliding(*dx_collision.unwrap() as i8) {
             self.pos.x = self.pos.x + dpos.x;
         }
 
@@ -62,7 +62,7 @@ impl Player {
             self.pos.x as usize,
             (self.pos.y + (dpos.y * PLAYER_SIZE)) as usize,
         );
-        if dy_collision.is_some() && !Palette::is_colliding(*dy_collision.unwrap() as i8) {
+        if dy_collision.is_some() && !Tileset::is_colliding(*dy_collision.unwrap() as i8) {
           self.pos.y = self.pos.y + dpos.y;
         }
 
