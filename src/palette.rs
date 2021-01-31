@@ -1,10 +1,11 @@
 
-use crate::core::assets::load_png;
+use crate::core::assets::{Image, load_png};
 
 #[allow(dead_code)]
 #[derive(Clone)]
 pub struct Palette {
-  colors: Vec<[u8; 4]>
+  colors: Vec<[u8; 4]>,
+  pub textures: Vec<Image>
 }
 
 #[allow(dead_code)]
@@ -17,7 +18,10 @@ impl Palette {
           // println!("{}, {}, {}, {}", chunk[0], chunk[1], chunk[2], chunk[3]);
           [chunk[0], chunk[1], chunk[2], chunk[3]]
         })
-        .collect()
+        .collect(),
+      textures: [
+        load_png("map.png")
+      ].to_vec()
     }
   }
 

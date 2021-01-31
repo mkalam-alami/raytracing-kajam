@@ -1,6 +1,8 @@
 use png::Transformations;
 use std::fs::File;
 
+use super::config::Color;
+
 #[derive(Clone)]
 pub struct ImageMetadata {
   pub width: i32,
@@ -13,6 +15,13 @@ pub struct ImageMetadata {
 pub struct Image {
   pub meta: ImageMetadata,
   pub bytes: Vec<u8>,
+}
+
+impl Image {
+  pub fn get(&self, i: i32, j: i32, out: &mut Color) {
+    let start_index = ((j * self.meta.width + i) * self.meta.bytes_per_pixel as i32) as usize;
+    out.copy_from_slice(&self.bytes[start_index..start_index + 4]);
+  }
 }
 
 pub fn load_png(path: &str) -> Image {

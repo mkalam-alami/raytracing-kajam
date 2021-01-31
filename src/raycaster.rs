@@ -1,4 +1,4 @@
-use crate::{core::draw::draw_straight_line, palette::Palette};
+use crate::{core::{assets::Image, colors::Color, draw::draw_pixel, math::clamp}, palette::Palette};
 use crate::core::config;
 use crate::map::Map;
 use crate::point::Point;
@@ -90,13 +90,46 @@ impl Raycaster {
         } else {
           (map_coords.x - player.pos.x + (1. - step.x) / 2.) / ray_dir.x
         };
-        let line_height = screen_size.y / perp_wall_dist;
-        let draw_start_y = ((screen_size.y + line_height) / 2.).min(screen_size.y - 1.);
-        let draw_end_y = ((screen_size.y - line_height) / 2.).max(0.);
-
-        let color = self.palette.pick(hit as usize);
-        draw_straight_line(frame, x as i32, draw_start_y as i32, x as i32, draw_end_y as i32, &color);
+        self.draw_column(frame, x, player.pos, side, perp_wall_dist, ray_dir, screen_size);
       }
     }
+  }
+
+  fn draw_column(&self, frame: &mut [u8], x: i32, pos: Point, side: bool, perp_wall_dist: f32, ray_dir: Point, screen_size: Point) {
+    let texture = self.palette.textures.get(0).unwrap();
+
+    let tex_x = self.calc_tex_x(texture, pos, side, perp_wall_dist, ray_dir);
+
+    let line_height = screen_size.y / perp_wall_dist;
+    let draw_high_y = ((screen_size.y + line_height) / 2.).min(screen_size.y - 1.) as i32;
+    let draw_low_y = ((screen_size.y - line_height) / 2.).max(0.) as i32;
+
+    let mut pixel_color: Color = Default::default();
+    let step = (texture.meta.height as f32) / line_height;
+    let mut tex_pos = (draw_low_y as f32 - screen_size.y / 2. + line_height / 2.) * step;
+    for y in draw_low_y..draw_high_y {
+      let tex_y = clamp(tex_pos as i32, 0, texture.meta.height - 1);
+      tex_pos += step;
+      texture.get(tex_x, tex_y, &mut pixel_color);
+      draw_pixel(frame, x, y, &pixel_color);
+    }
+  }
+
+  fn calc_tex_x(&self, texture: &Image, pos: Point, side: bool, perp_wall_dist: f32, ray_dir: Point) -> i32 {
+    let mut wall_x: f32;
+    if side {
+      wall_x = pos.x + perp_wall_dist * ray_dir.x;
+    } else {
+      wall_x = pos.y + perp_wall_dist * ray_dir.y;
+    }
+    wall_x = wall_x.fract();
+
+    // x coordinate on the texture
+    let mut tex_x = (wall_x * texture.meta.width as f32) as i32;
+    if (side && ray_dir.y < 0.) || (!side && ray_dir.x > 0.) {
+      tex_x = texture.meta.width - tex_x - 1;
+    }
+
+    clamp(tex_x, 0, texture.meta.width - 1)
   }
 }
